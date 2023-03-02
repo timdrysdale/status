@@ -1,0 +1,202 @@
+---
+swagger: '2.0'
+info:
+  version: '0.0'
+  title: Status
+  description: API for accessing status of experiments
+  contact:
+    email: timothy.d.drysdale@gmail.com
+    name: Timothy Drysdale
+    url: https://github.com/timdrysdale
+host: localhost
+basePath: /
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  
+  /experiments:
+    get:
+      description:  Get the status of all experiments
+      summary:  Get the status of all experiments
+      operationId: statusExperiments
+      deprecated: false
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/ExperimentStatuses'
+          headers: {}
+        401:
+          $ref: '#/responses/Unauthorized'
+        404:
+          $ref: '#/responses/NotFound'
+        500:
+          $ref: '#/responses/InternalError'
+
+  /jumps:
+    get:
+      description: Get the status of all jump connections
+      summary: Get the status of all jump connections
+      operationId: statusJumps
+      deprecated: False
+      produces:
+      - application/json
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: Status
+          schema:
+            $ref: '#/definitions/JumpStatuses'
+        401:
+          description: Unauthorized
+          schema:
+             $ref: '#/definitions/Error'       
+
+definitions:
+  
+  Error:
+    type: object
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    required:
+      - code
+      - message
+      
+  ExperimentStatus:
+    title: Status of an experiment
+    type: object
+    properties:
+      name:
+        description: name of the experiment
+        example: spin30
+        type: string
+      data:
+        $ref: '#/definitions/StreamStatus'
+      video:
+        $ref: '#/definitions/StreamStatus'
+      test:
+        $ref: '#/definitions/TestStatus'
+    required:
+      - data
+      - name
+      - test
+      - video
+
+  ExperimentStatuses:
+    title: List of experiment statuses
+    type: array
+    items:
+       $ref: '#/definitions/ExperimentStatus'
+       
+  JumpStatus:
+    title: Status of the jump connection for an experiment
+    type: object
+    properties:
+      name:
+        description: name of the experiment
+        example: spin30
+        type: string
+      active:
+        description: is the experiment currently actively sending?
+        type: boolean
+      clients:
+        description: number of clients connected (0 if just the experiment)
+        type: number
+        format: integer
+      connected:
+        description: is the experiment currently connected to jump?
+        type: boolean
+      last:
+        description: duration since last send by experiment
+        type: string
+    required:
+    - name  
+    - active
+    - clients
+    - connected
+    - last
+    
+  JumpStatuses:
+    title: List of jump statuses
+    type: array
+    items:
+       $ref: '#/definitions/JumpStatus'
+
+  StreamStatus:
+    title: Status of a stream
+    type: object
+    properties:
+      active:
+        description: is the experiment currently actively sending?
+        type: boolean
+      clients:
+        description: number of clients connected (0 if just the experiment)
+        type: number
+        format: integer
+      connected:
+        description: is the experiment currently connected to relay?
+        type: boolean
+      last:
+        description: duration since last send by experiment
+        type: string
+      required:
+        description: does the experiment require this stream?
+        type: boolean
+    required:
+    - active
+    - clients
+    - connected
+    - last
+    - required
+    
+  TestStatus:
+    title: Status of a test
+    type: object
+    properties:
+      passed:
+        description: did the experiment pass the test last time?
+        type: boolean
+      score:
+        description: number of tests passed to date
+        type: number
+        format: integer
+      attempts:
+        description: number of tests attempted to date
+        type: number
+        format: integer
+      last:
+        description: RFC3339 datetime of last test
+        type: string
+    required:
+    - passed
+    - last
+
+
+responses:
+  NotFound:
+    description: The specified resource was not found
+    schema:
+      $ref: '#/definitions/Error'
+  Unauthorized:
+    description: Unauthorized
+    schema:
+      $ref: '#/definitions/Error'
+  InternalError:
+    description: Internal Error
+    schema:
+      $ref: '#/definitions/Error'
